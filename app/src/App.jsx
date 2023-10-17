@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useEffect, useReducer } from "react";
 
 import TodoList from "./components/TodoList";
 import TodoAddForm from "./components/TodoAddForm";
@@ -11,10 +11,31 @@ import TodoAddForm from "./components/TodoAddForm";
 }
 */
 function App() {
-  const [todos, dispatch] = useReducer(todoReducer, []);
+  const [todos, dispatch] = useReducer(todoReducer, saveToLocalStorage());
+
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todos));
+  }, [todos]);
+
+  // useEffect(() => {
+  //   dispatch({ type: "LOAD_TODOS", value: saveToLocalStorage() });
+  // }, []);
+
+  function saveToLocalStorage() {
+    const storedValues = localStorage.getItem("todos");
+    if (storedValues) {
+      return JSON.parse(storedValues);
+    } else {
+      return [];
+    }
+  }
 
   function todoReducer(todos, action) {
     switch (action.type) {
+      // case "LOAD_TODOS": {
+      //   return action.value;
+      // }
+
       case "TODO_ADD": {
         return [
           ...todos,
@@ -36,8 +57,19 @@ function App() {
         if (idx !== -1) {
           newTodos[idx]["isEdit"] = true;
         }
-        console.log("working" + action.value);
         return newTodos;
+      }
+      case "TODO_UPDATE": {
+        const newTodos = [...todos];
+        const idx = newTodos.findIndex((nt) => nt.id === action.value.id);
+        if (idx !== -1) {
+          newTodos[idx]["text"] = action.value.text;
+          newTodos[idx]["isEdit"] = false;
+        }
+        return newTodos;
+      }
+      case "TODO_DRAG": {
+        return action.value;
       }
       case "TODO_DONE": {
         const newTodos = [...todos];
@@ -79,6 +111,18 @@ function App() {
       value: id,
     });
   }
+  function handleUpdate(text, id) {
+    dispatch({
+      type: "TODO_UPDATE",
+      value: { text, id },
+    });
+  }
+  function dragUpdate(newTodos) {
+    dispatch({
+      type: "TODO_DRAG",
+      value: newTodos,
+    });
+  }
   function handleDone(id, type) {
     if (type == "done") {
       dispatch({
@@ -103,6 +147,8 @@ function App() {
         handleDelete={handleDelete}
         handleDone={handleDone}
         handleEdit={handleEdit}
+        handleUpdate={handleUpdate}
+        dragUpdate={dragUpdate}
       />
     </>
   );

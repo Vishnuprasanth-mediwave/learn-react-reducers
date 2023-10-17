@@ -18,6 +18,7 @@ const TodoAddForm = ({ handleAdd }) => {
             setText(e.target.value);
           }}
           value={text}
+          minLength={5}
           required
         />
       </label>
